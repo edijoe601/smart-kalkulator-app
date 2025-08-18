@@ -21,6 +21,11 @@ export default function CatalogOrders() {
     queryFn: () => backend.catalog.listOrders()
   });
 
+  const { data: settingsData } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => backend.settings.getSettings()
+  });
+
   const updateStatusMutation = useMutation({
     mutationFn: (data: { orderId: number; orderStatus: string; paymentStatus?: string }) => 
       backend.catalog.updateOrderStatus(data),
@@ -119,82 +124,92 @@ export default function CatalogOrders() {
   };
 
   const printReceipt = () => {
-    if (receiptData) {
+    if (receiptData && settingsData) {
       const printWindow = window.open('', '_blank');
       if (printWindow) {
+        const receiptWidth = settingsData.receiptWidth || 58;
+        const isSmallReceipt = receiptWidth === 58;
+        
         printWindow.document.write(`
           <html>
             <head>
               <title>Struk Pembelian - ${receiptData.orderNumber}</title>
               <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                .header { text-align: center; margin-bottom: 20px; }
-                .order-info { margin-bottom: 20px; }
-                .items { margin-bottom: 20px; }
-                .total { border-top: 2px solid #000; padding-top: 10px; }
+                body { 
+                  font-family: 'Courier New', monospace; 
+                  margin: 0; 
+                  padding: 10px;
+                  font-size: ${isSmallReceipt ? '10px' : '12px'};
+                  width: ${receiptWidth}mm;
+                  max-width: ${receiptWidth}mm;
+                }
+                .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+                .order-info { margin-bottom: 10px; }
+                .items { margin-bottom: 10px; }
+                .total { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
+                .footer { text-align: center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px; }
                 table { width: 100%; border-collapse: collapse; }
-                th, td { padding: 5px; text-align: left; }
+                th, td { padding: 2px 0; text-align: left; }
                 .text-right { text-align: right; }
+                .text-center { text-align: center; }
+                .bold { font-weight: bold; }
+                .item-row { display: flex; justify-content: space-between; margin: 2px 0; }
               </style>
             </head>
             <body>
               <div class="header">
-                <h2>${receiptData.storeName}</h2>
-                ${receiptData.storeAddress ? `<p>${receiptData.storeAddress}</p>` : ''}
-                ${receiptData.storePhone ? `<p>Telp: ${receiptData.storePhone}</p>` : ''}
+                <div class="bold">${receiptData.storeName}</div>
+                ${receiptData.storeAddress ? `<div>${receiptData.storeAddress}</div>` : ''}
+                ${receiptData.storePhone ? `<div>Telp: ${receiptData.storePhone}</div>` : ''}
               </div>
               
               <div class="order-info">
-                <p><strong>No. Pesanan:</strong> ${receiptData.orderNumber}</p>
-                <p><strong>Tanggal:</strong> ${formatDate(receiptData.orderDate)}</p>
-                <p><strong>Pelanggan:</strong> ${receiptData.customerName}</p>
-                <p><strong>Telepon:</strong> ${receiptData.customerPhone}</p>
-                <p><strong>Alamat Kirim:</strong> ${receiptData.deliveryAddress}</p>
-                <p><strong>Pembayaran:</strong> ${receiptData.paymentMethod}</p>
+                <div>No: ${receiptData.orderNumber}</div>
+                <div>Tgl: ${formatDate(receiptData.orderDate)}</div>
+                <div>Pelanggan: ${receiptData.customerName}</div>
+                <div>Telp: ${receiptData.customerPhone}</div>
+                <div>Alamat: ${receiptData.deliveryAddress}</div>
+                <div>Bayar: ${receiptData.paymentMethod}</div>
               </div>
               
               <div class="items">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Item</th>
-                      <th>Qty</th>
-                      <th>Harga</th>
-                      <th class="text-right">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${receiptData.items.map(item => `
-                      <tr>
-                        <td>${item.productName}</td>
-                        <td>${item.quantity}</td>
-                        <td>${formatCurrency(item.unitPrice)}</td>
-                        <td class="text-right">${formatCurrency(item.totalPrice)}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
+                ${receiptData.items.map(item => `
+                  <div class="item-row">
+                    <span>${item.quantity}x ${item.productName}</span>
+                    <span>${formatCurrency(item.totalPrice)}</span>
+                  </div>
+                `).join('')}
               </div>
               
               <div class="total">
-                <table>
-                  <tr>
-                    <td><strong>Subtotal:</strong></td>
-                    <td class="text-right"><strong>${formatCurrency(receiptData.subtotal)}</strong></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Ongkos Kirim:</strong></td>
-                    <td class="text-right"><strong>${formatCurrency(receiptData.deliveryFee)}</strong></td>
-                  </tr>
-                  <tr style="border-top: 1px solid #000;">
-                    <td><strong>Total:</strong></td>
-                    <td class="text-right"><strong>${formatCurrency(receiptData.totalAmount)}</strong></td>
-                  </tr>
-                </table>
+                <div class="item-row">
+                  <span>Subtotal:</span>
+                  <span>${formatCurrency(receiptData.subtotal)}</span>
+                </div>
+                <div class="item-row">
+                  <span>Ongkir:</span>
+                  <span>${formatCurrency(receiptData.deliveryFee)}</span>
+                </div>
+                <div class="item-row bold">
+                  <span>TOTAL:</span>
+                  <span>${formatCurrency(receiptData.totalAmount)}</span>
+                </div>
               </div>
               
-              <div style="text-align: center; margin-top: 30px;">
-                <p>Terima kasih atas pembelian Anda!</p>
+              ${settingsData.receiptHeader ? `
+                <div class="footer">
+                  ${settingsData.receiptHeader}
+                </div>
+              ` : ''}
+              
+              ${settingsData.receiptFooter ? `
+                <div class="footer">
+                  ${settingsData.receiptFooter}
+                </div>
+              ` : ''}
+              
+              <div class="footer">
+                <div>Terima kasih atas pembelian Anda!</div>
               </div>
             </body>
           </html>

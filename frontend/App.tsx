@@ -13,6 +13,9 @@ import Targets from './pages/Targets';
 import Catalog from './pages/Catalog';
 import CatalogOrders from './pages/CatalogOrders';
 import PublicCatalog from './pages/PublicCatalog';
+import Channels from './pages/Channels';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 
 const queryClient = new QueryClient();
 
@@ -37,6 +40,9 @@ function AppInner() {
               <Route path="/targets" element={<Targets />} />
               <Route path="/catalog-admin" element={<Catalog />} />
               <Route path="/catalog-orders" element={<CatalogOrders />} />
+              <Route path="/channels" element={<Channels />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </Layout>
         } />

@@ -11,7 +11,10 @@ import {
   Megaphone,
   TrendingUp,
   Globe,
-  ShoppingBag
+  ShoppingBag,
+  BarChart3,
+  Settings,
+  Zap
 } from 'lucide-react';
 
 const menuItems = [
@@ -25,6 +28,9 @@ const menuItems = [
   { name: 'Pesanan Online', path: '/catalog-orders', icon: ShoppingBag },
   { name: 'Target Penjualan', path: '/targets', icon: Target },
   { name: 'Program Promo', path: '/promotions', icon: Megaphone },
+  { name: 'Channel Penjualan', path: '/channels', icon: Zap },
+  { name: 'Laporan', path: '/reports', icon: BarChart3 },
+  { name: 'Pengaturan', path: '/settings', icon: Settings },
 ];
 
 export default function Sidebar() {
