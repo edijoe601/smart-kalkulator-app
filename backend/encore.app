@@ -1,0 +1,1 @@
+{"id": "smart-kalkulator-app-gdui", "lang": "typescript"}
