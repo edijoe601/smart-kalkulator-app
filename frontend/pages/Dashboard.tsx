@@ -11,7 +11,9 @@ import {
   ShoppingCart,
   Target,
   Megaphone,
-  CreditCard
+  CreditCard,
+  Globe,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -140,16 +142,40 @@ export default function Dashboard() {
       {/* Bottom Feature Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Kalkulator Promo"
-          value="Simulator"
-          subtitle="Tool simulasi promo"
-          icon={<Megaphone className="w-6 h-6 text-pink-600" />}
-          iconBg="bg-pink-100"
+          title="Katalog Online"
+          value="Toko Online"
+          subtitle="Penjualan online"
+          icon={<Globe className="w-6 h-6 text-teal-600" />}
+          iconBg="bg-teal-100"
           actions={
-            <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Tampilkan Simulator
-            </Button>
+            <div className="space-y-2">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Kelola Katalog
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                Lihat Pesanan
+              </Button>
+            </div>
+          }
+        />
+
+        <StatCard
+          title="POS System"
+          value="6"
+          subtitle="Transaksi"
+          icon={<CreditCard className="w-6 h-6 text-red-600" />}
+          iconBg="bg-red-100"
+          actions={
+            <div className="space-y-2">
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Transaksi Baru
+              </Button>
+              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+                Riwayat Transaksi
+              </Button>
+            </div>
           }
         />
 
@@ -173,40 +199,16 @@ export default function Dashboard() {
         />
 
         <StatCard
-          title="Kalkulator Belanja"
-          value="Tools"
-          subtitle="Hitung kebutuhan"
-          icon={<Package className="w-6 h-6 text-teal-600" />}
-          iconBg="bg-teal-100"
+          title="Kalkulator Promo"
+          value="Simulator"
+          subtitle="Tool simulasi promo"
+          icon={<Megaphone className="w-6 h-6 text-pink-600" />}
+          iconBg="bg-pink-100"
           actions={
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Hitung Kebutuhan
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                Pengaturan
-              </Button>
-            </div>
-          }
-        />
-
-        <StatCard
-          title="POS System"
-          value="6"
-          subtitle="Transaksi"
-          icon={<CreditCard className="w-6 h-6 text-red-600" />}
-          iconBg="bg-red-100"
-          actions={
-            <div className="space-y-2">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                <Plus className="w-4 h-4 mr-2" />
-                Transaksi Baru
-              </Button>
-              <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
-                Riwayat Transaksi
-              </Button>
-            </div>
+            <Button variant="ghost" size="sm" className="w-full justify-start text-sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Tampilkan Simulator
+            </Button>
           }
         />
       </div>

@@ -10,24 +10,37 @@ import Sales from './pages/Sales';
 import POS from './pages/POS';
 import Promotions from './pages/Promotions';
 import Targets from './pages/Targets';
+import Catalog from './pages/Catalog';
+import CatalogOrders from './pages/CatalogOrders';
+import PublicCatalog from './pages/PublicCatalog';
 
 const queryClient = new QueryClient();
 
 function AppInner() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/ingredients" element={<Ingredients />} />
-          <Route path="/recipes" element={<Recipes />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/sales" element={<Sales />} />
-          <Route path="/pos" element={<POS />} />
-          <Route path="/promotions" element={<Promotions />} />
-          <Route path="/targets" element={<Targets />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* Public catalog route */}
+        <Route path="/catalog" element={<PublicCatalog />} />
+        
+        {/* Admin routes */}
+        <Route path="/*" element={
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/ingredients" element={<Ingredients />} />
+              <Route path="/recipes" element={<Recipes />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/sales" element={<Sales />} />
+              <Route path="/pos" element={<POS />} />
+              <Route path="/promotions" element={<Promotions />} />
+              <Route path="/targets" element={<Targets />} />
+              <Route path="/catalog-admin" element={<Catalog />} />
+              <Route path="/catalog-orders" element={<CatalogOrders />} />
+            </Routes>
+          </Layout>
+        } />
+      </Routes>
       <Toaster />
     </Router>
   );

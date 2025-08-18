@@ -9,7 +9,9 @@ import {
   CreditCard,
   Target,
   Megaphone,
-  TrendingUp
+  TrendingUp,
+  Globe,
+  ShoppingBag
 } from 'lucide-react';
 
 const menuItems = [
@@ -19,6 +21,8 @@ const menuItems = [
   { name: 'Harga Jual', path: '/products', icon: TrendingUp },
   { name: 'Penjualan', path: '/sales', icon: ShoppingCart },
   { name: 'POS System', path: '/pos', icon: CreditCard },
+  { name: 'Katalog Online', path: '/catalog-admin', icon: Globe },
+  { name: 'Pesanan Online', path: '/catalog-orders', icon: ShoppingBag },
   { name: 'Target Penjualan', path: '/targets', icon: Target },
   { name: 'Program Promo', path: '/promotions', icon: Megaphone },
 ];
