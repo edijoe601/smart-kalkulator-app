@@ -15,6 +15,9 @@ export interface SalesTransaction {
   transactionNumber: string;
   customerName?: string;
   customerPhone?: string;
+  customerAddress?: string;
+  subtotal: number;
+  deliveryFee: number;
   totalAmount: number;
   paymentMethod: string;
   status: string;
@@ -37,6 +40,9 @@ export const listTransactions = api<void, ListTransactionsResponse>(
       transaction_number: string;
       customer_name: string | null;
       customer_phone: string | null;
+      customer_address: string | null;
+      subtotal: number;
+      delivery_fee: number;
       total_amount: number;
       payment_method: string;
       status: string;
@@ -67,6 +73,9 @@ export const listTransactions = api<void, ListTransactionsResponse>(
         transactionNumber: transaction.transaction_number,
         customerName: transaction.customer_name || undefined,
         customerPhone: transaction.customer_phone || undefined,
+        customerAddress: transaction.customer_address || undefined,
+        subtotal: transaction.subtotal,
+        deliveryFee: transaction.delivery_fee,
         totalAmount: transaction.total_amount,
         paymentMethod: transaction.payment_method,
         status: transaction.status,

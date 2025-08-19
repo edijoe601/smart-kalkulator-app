@@ -12,8 +12,10 @@ export interface CreateSalesItem {
 export interface CreateTransactionRequest {
   customerName?: string;
   customerPhone?: string;
+  customerAddress?: string;
   paymentMethod: string;
   notes?: string;
+  deliveryFee?: number;
   items: CreateSalesItem[];
 }
 
@@ -24,7 +26,9 @@ export const createTransaction = api<CreateTransactionRequest, SalesTransaction>
     const tx = await salesDB.begin();
     
     try {
-      const totalAmount = req.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+      const subtotal = req.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
+      const deliveryFee = req.deliveryFee || 0;
+      const totalAmount = subtotal + deliveryFee;
       const transactionNumber = `TXN-${Date.now()}`;
 
       const transactionRow = await tx.queryRow<{
@@ -32,6 +36,9 @@ export const createTransaction = api<CreateTransactionRequest, SalesTransaction>
         transaction_number: string;
         customer_name: string | null;
         customer_phone: string | null;
+        customer_address: string | null;
+        subtotal: number;
+        delivery_fee: number;
         total_amount: number;
         payment_method: string;
         status: string;
@@ -39,8 +46,15 @@ export const createTransaction = api<CreateTransactionRequest, SalesTransaction>
         created_at: Date;
         updated_at: Date;
       }>`
-        INSERT INTO sales_transactions (transaction_number, customer_name, customer_phone, total_amount, payment_method, notes)
-        VALUES (${transactionNumber}, ${req.customerName || null}, ${req.customerPhone || null}, ${totalAmount}, ${req.paymentMethod}, ${req.notes || null})
+        INSERT INTO sales_transactions (
+          transaction_number, customer_name, customer_phone, customer_address,
+          subtotal, delivery_fee, total_amount, payment_method, notes
+        )
+        VALUES (
+          ${transactionNumber}, ${req.customerName || null}, ${req.customerPhone || null}, 
+          ${req.customerAddress || null}, ${subtotal}, ${deliveryFee}, ${totalAmount}, 
+          ${req.paymentMethod}, ${req.notes || null}
+        )
         RETURNING *
       `;
 
@@ -83,6 +97,9 @@ export const createTransaction = api<CreateTransactionRequest, SalesTransaction>
         transactionNumber: transactionRow.transaction_number,
         customerName: transactionRow.customer_name || undefined,
         customerPhone: transactionRow.customer_phone || undefined,
+        customerAddress: transactionRow.customer_address || undefined,
+        subtotal: transactionRow.subtotal,
+        deliveryFee: transactionRow.delivery_fee,
         totalAmount: transactionRow.total_amount,
         paymentMethod: transactionRow.payment_method,
         status: transactionRow.status,

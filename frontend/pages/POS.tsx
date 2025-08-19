@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
-import { Plus, Minus, ShoppingCart, Trash2, CreditCard } from 'lucide-react';
+import { Plus, Minus, ShoppingCart, Trash2, CreditCard, Printer } from 'lucide-react';
 import type { Product } from '~backend/products/list';
 import type { CreateTransactionRequest, CreateSalesItem } from '~backend/sales/create_transaction';
 
@@ -20,8 +21,11 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
+  const [includeDelivery, setIncludeDelivery] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(0);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -31,15 +35,30 @@ export default function POS() {
     queryFn: () => backend.products.list()
   });
 
+  const { data: settingsData } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => backend.settings.getSettings()
+  });
+
   const createTransactionMutation = useMutation({
     mutationFn: (data: CreateTransactionRequest) => backend.sales.createTransaction(data),
-    onSuccess: () => {
+    onSuccess: (transaction) => {
       queryClient.invalidateQueries({ queryKey: ['sales-transactions'] });
+      
+      // Auto print receipt if enabled
+      if (settingsData?.autoPrintReceipt) {
+        printReceipt(transaction);
+      }
+      
       setCart([]);
       setCustomerName('');
       setCustomerPhone('');
+      setCustomerAddress('');
       setPaymentMethod('');
       setNotes('');
+      setIncludeDelivery(false);
+      setDeliveryFee(0);
+      
       toast({
         title: "Berhasil",
         description: "Transaksi berhasil disimpan"
@@ -85,8 +104,12 @@ export default function POS() {
     setCart(cart.filter(item => item.id !== itemId));
   };
 
-  const getTotalAmount = () => {
+  const getSubtotal = () => {
     return cart.reduce((total, item) => total + (item.quantity * item.unitPrice), 0);
+  };
+
+  const getTotalAmount = () => {
+    return getSubtotal() + (includeDelivery ? deliveryFee : 0);
   };
 
   const handleCheckout = () => {
@@ -111,8 +134,10 @@ export default function POS() {
     const transactionData: CreateTransactionRequest = {
       customerName: customerName || undefined,
       customerPhone: customerPhone || undefined,
+      customerAddress: customerAddress || undefined,
       paymentMethod,
       notes: notes || undefined,
+      deliveryFee: includeDelivery ? deliveryFee : 0,
       items: cart.map(item => ({
         productId: item.productId,
         productName: item.productName,
@@ -122,6 +147,99 @@ export default function POS() {
     };
 
     createTransactionMutation.mutate(transactionData);
+  };
+
+  const printReceipt = (transaction: any) => {
+    const printWindow = window.open('', '_blank');
+    if (printWindow && settingsData) {
+      const receiptWidth = settingsData.receiptWidth || 58;
+      const isSmallReceipt = receiptWidth === 58;
+      
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Struk Pembelian - ${transaction.transactionNumber}</title>
+            <style>
+              body { 
+                font-family: 'Courier New', monospace; 
+                margin: 0; 
+                padding: 10px;
+                font-size: ${isSmallReceipt ? '10px' : '12px'};
+                width: ${receiptWidth}mm;
+                max-width: ${receiptWidth}mm;
+              }
+              .header { text-align: center; margin-bottom: 10px; border-bottom: 1px dashed #000; padding-bottom: 5px; }
+              .transaction-info { margin-bottom: 10px; }
+              .items { margin-bottom: 10px; }
+              .total { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
+              .footer { text-align: center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px; }
+              .item-row { display: flex; justify-content: space-between; margin: 2px 0; }
+              .bold { font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="bold">${settingsData.storeName}</div>
+              ${settingsData.storeAddress ? `<div>${settingsData.storeAddress}</div>` : ''}
+              ${settingsData.storePhone ? `<div>Telp: ${settingsData.storePhone}</div>` : ''}
+            </div>
+            
+            <div class="transaction-info">
+              <div>No: ${transaction.transactionNumber}</div>
+              <div>Tgl: ${new Date().toLocaleDateString('id-ID')} ${new Date().toLocaleTimeString('id-ID')}</div>
+              ${transaction.customerName ? `<div>Pelanggan: ${transaction.customerName}</div>` : ''}
+              ${transaction.customerPhone ? `<div>Telp: ${transaction.customerPhone}</div>` : ''}
+              ${transaction.customerAddress ? `<div>Alamat: ${transaction.customerAddress}</div>` : ''}
+              <div>Bayar: ${transaction.paymentMethod}</div>
+            </div>
+            
+            <div class="items">
+              ${transaction.items.map((item: any) => `
+                <div class="item-row">
+                  <span>${item.quantity}x ${item.productName}</span>
+                  <span>${formatCurrency(item.totalPrice)}</span>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div class="total">
+              <div class="item-row">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(transaction.subtotal)}</span>
+              </div>
+              ${transaction.deliveryFee > 0 ? `
+                <div class="item-row">
+                  <span>Ongkir:</span>
+                  <span>${formatCurrency(transaction.deliveryFee)}</span>
+                </div>
+              ` : ''}
+              <div class="item-row bold">
+                <span>TOTAL:</span>
+                <span>${formatCurrency(transaction.totalAmount)}</span>
+              </div>
+            </div>
+            
+            ${settingsData.receiptHeader ? `
+              <div class="footer">
+                ${settingsData.receiptHeader}
+              </div>
+            ` : ''}
+            
+            ${settingsData.receiptFooter ? `
+              <div class="footer">
+                ${settingsData.receiptFooter}
+              </div>
+            ` : ''}
+            
+            <div class="footer">
+              <div>Terima kasih atas kunjungan Anda!</div>
+            </div>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -235,10 +353,20 @@ export default function POS() {
                       </div>
                     </div>
                   ))}
-                  <div className="border-t pt-4">
+                  <div className="border-t pt-4 space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold">Total:</span>
-                      <span className="text-lg font-bold text-green-600">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(getSubtotal())}</span>
+                    </div>
+                    {includeDelivery && (
+                      <div className="flex justify-between items-center">
+                        <span>Ongkir:</span>
+                        <span>{formatCurrency(deliveryFee)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center text-lg font-bold border-t pt-2">
+                      <span>Total:</span>
+                      <span className="text-green-600">
                         {formatCurrency(getTotalAmount())}
                       </span>
                     </div>
@@ -272,6 +400,38 @@ export default function POS() {
                 placeholder="Masukkan no. telepon"
               />
             </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="includeDelivery"
+                checked={includeDelivery}
+                onCheckedChange={setIncludeDelivery}
+              />
+              <Label htmlFor="includeDelivery">Termasuk Pengiriman</Label>
+            </div>
+            {includeDelivery && (
+              <>
+                <div>
+                  <Label htmlFor="customerAddress">Alamat Pengiriman</Label>
+                  <Textarea
+                    id="customerAddress"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="Masukkan alamat lengkap"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="deliveryFee">Ongkos Kirim</Label>
+                  <Input
+                    id="deliveryFee"
+                    type="number"
+                    value={deliveryFee}
+                    onChange={(e) => setDeliveryFee(parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                  />
+                </div>
+              </>
+            )}
             <div>
               <Label htmlFor="paymentMethod">Metode Pembayaran</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -302,7 +462,7 @@ export default function POS() {
               disabled={cart.length === 0 || createTransactionMutation.isPending}
             >
               <CreditCard className="w-4 h-4 mr-2" />
-              {createTransactionMutation.isPending ? 'Memproses...' : 'Checkout'}
+              {createTransactionMutation.isPending ? 'Memproses...' : `Checkout - ${formatCurrency(getTotalAmount())}`}
             </Button>
           </CardContent>
         </Card>
