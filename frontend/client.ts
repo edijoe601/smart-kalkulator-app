@@ -33,6 +33,7 @@ const BROWSER = typeof globalThis === "object" && ("window" in globalThis);
  * Client is an API client for the  Encore application.
  */
 export class Client {
+    public readonly admin: admin.ServiceClient
     public readonly catalog: catalog.ServiceClient
     public readonly channels: channels.ServiceClient
     public readonly dashboard: dashboard.ServiceClient
@@ -60,6 +61,7 @@ export class Client {
         this.target = target
         this.options = options ?? {}
         const base = new BaseClient(this.target, this.options)
+        this.admin = new admin.ServiceClient(base)
         this.catalog = new catalog.ServiceClient(base)
         this.channels = new channels.ServiceClient(base)
         this.dashboard = new dashboard.ServiceClient(base)
@@ -89,6 +91,11 @@ export class Client {
 }
 
 /**
+ * Import the auth handler to be able to derive the auth type
+ */
+import type { auth as auth_auth } from "~backend/auth/auth";
+
+/**
  * ClientOptions allows you to override any default behaviour within the generated Encore client.
  */
 export interface ClientOptions {
@@ -101,6 +108,122 @@ export interface ClientOptions {
 
     /** Default RequestInit to be used for the client */
     requestInit?: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
+
+    /**
+     * Allows you to set the authentication data to be used for each
+     * request either by passing in a static object or by passing in
+     * a function which returns a new object for each request.
+     */
+    auth?: RequestType<typeof auth_auth> | AuthDataGenerator
+}
+
+/**
+ * Import the endpoint handlers to derive the types for the client.
+ */
+import { getAdminDashboardStats as api_admin_dashboard_stats_getAdminDashboardStats } from "~backend/admin/dashboard_stats";
+import {
+    getLandingPageSettings as api_admin_landing_page_getLandingPageSettings,
+    updateLandingPageSettings as api_admin_landing_page_updateLandingPageSettings
+} from "~backend/admin/landing_page";
+import {
+    createTenant as api_admin_manage_users_createTenant,
+    deleteTenant as api_admin_manage_users_deleteTenant,
+    listTenants as api_admin_manage_users_listTenants,
+    updateTenant as api_admin_manage_users_updateTenant
+} from "~backend/admin/manage_users";
+
+export namespace admin {
+
+    export class ServiceClient {
+        private baseClient: BaseClient
+
+        constructor(baseClient: BaseClient) {
+            this.baseClient = baseClient
+            this.createTenant = this.createTenant.bind(this)
+            this.deleteTenant = this.deleteTenant.bind(this)
+            this.getAdminDashboardStats = this.getAdminDashboardStats.bind(this)
+            this.getLandingPageSettings = this.getLandingPageSettings.bind(this)
+            this.listTenants = this.listTenants.bind(this)
+            this.updateLandingPageSettings = this.updateLandingPageSettings.bind(this)
+            this.updateTenant = this.updateTenant.bind(this)
+        }
+
+        /**
+         * Creates a new tenant.
+         */
+        public async createTenant(params: RequestType<typeof api_admin_manage_users_createTenant>): Promise<ResponseType<typeof api_admin_manage_users_createTenant>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/tenants`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_manage_users_createTenant>
+        }
+
+        /**
+         * Deletes a tenant.
+         */
+        public async deleteTenant(params: { id: string }): Promise<ResponseType<typeof api_admin_manage_users_deleteTenant>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/tenants/${encodeURIComponent(params.id)}`, {method: "DELETE", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_manage_users_deleteTenant>
+        }
+
+        /**
+         * Retrieves admin dashboard statistics.
+         */
+        public async getAdminDashboardStats(): Promise<ResponseType<typeof api_admin_dashboard_stats_getAdminDashboardStats>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/dashboard/stats`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_dashboard_stats_getAdminDashboardStats>
+        }
+
+        /**
+         * Retrieves landing page settings.
+         */
+        public async getLandingPageSettings(): Promise<ResponseType<typeof api_admin_landing_page_getLandingPageSettings>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/landing-page/settings`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_landing_page_getLandingPageSettings>
+        }
+
+        /**
+         * Retrieves all tenants.
+         */
+        public async listTenants(): Promise<ResponseType<typeof api_admin_manage_users_listTenants>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/tenants`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_manage_users_listTenants>
+        }
+
+        /**
+         * Updates landing page settings.
+         */
+        public async updateLandingPageSettings(params: RequestType<typeof api_admin_landing_page_updateLandingPageSettings>): Promise<ResponseType<typeof api_admin_landing_page_updateLandingPageSettings>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/landing-page/settings`, {method: "PUT", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_landing_page_updateLandingPageSettings>
+        }
+
+        /**
+         * Updates a tenant.
+         */
+        public async updateTenant(params: RequestType<typeof api_admin_manage_users_updateTenant>): Promise<ResponseType<typeof api_admin_manage_users_updateTenant>> {
+            // Construct the body with only the fields which we want encoded within the body (excluding query string or header fields)
+            const body: Record<string, any> = {
+                email:  params.email,
+                name:   params.name,
+                phone:  params.phone,
+                plan:   params.plan,
+                status: params.status,
+            }
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/tenants/${encodeURIComponent(params.id)}`, {method: "PUT", body: JSON.stringify(body)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_manage_users_updateTenant>
+        }
+    }
+}
+
+
+export namespace auth {
 }
 
 /**
@@ -113,6 +236,10 @@ import { getSettings as api_catalog_get_settings_getSettings } from "~backend/ca
 import { listOrders as api_catalog_list_orders_listOrders } from "~backend/catalog/list_orders";
 import { listProducts as api_catalog_list_products_listProducts } from "~backend/catalog/list_products";
 import { updateOrderStatus as api_catalog_update_order_status_updateOrderStatus } from "~backend/catalog/update_order_status";
+import {
+    getDeliverySchedule as api_catalog_whatsapp_integration_getDeliverySchedule,
+    processWhatsAppOrder as api_catalog_whatsapp_integration_processWhatsAppOrder
+} from "~backend/catalog/whatsapp_integration";
 
 export namespace catalog {
 
@@ -124,9 +251,11 @@ export namespace catalog {
             this.createOrder = this.createOrder.bind(this)
             this.exportOrders = this.exportOrders.bind(this)
             this.generateReceipt = this.generateReceipt.bind(this)
+            this.getDeliverySchedule = this.getDeliverySchedule.bind(this)
             this.getSettings = this.getSettings.bind(this)
             this.listOrders = this.listOrders.bind(this)
             this.listProducts = this.listProducts.bind(this)
+            this.processWhatsAppOrder = this.processWhatsAppOrder.bind(this)
             this.updateOrderStatus = this.updateOrderStatus.bind(this)
         }
 
@@ -158,6 +287,15 @@ export namespace catalog {
         }
 
         /**
+         * Generates delivery schedule options.
+         */
+        public async getDeliverySchedule(): Promise<ResponseType<typeof api_catalog_whatsapp_integration_getDeliverySchedule>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/delivery-schedule`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_integration_getDeliverySchedule>
+        }
+
+        /**
          * Retrieves catalog settings and payment methods.
          */
         public async getSettings(): Promise<ResponseType<typeof api_catalog_get_settings_getSettings>> {
@@ -182,6 +320,15 @@ export namespace catalog {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/catalog/products`, {method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_list_products_listProducts>
+        }
+
+        /**
+         * Processes WhatsApp order and generates auto-reply.
+         */
+        public async processWhatsAppOrder(params: RequestType<typeof api_catalog_whatsapp_integration_processWhatsAppOrder>): Promise<ResponseType<typeof api_catalog_whatsapp_integration_processWhatsAppOrder>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/order`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_integration_processWhatsAppOrder>
         }
 
         /**
@@ -637,6 +784,10 @@ export namespace reports {
 import { createTransaction as api_sales_create_transaction_createTransaction } from "~backend/sales/create_transaction";
 import { exportTransactions as api_sales_export_transactions_exportTransactions } from "~backend/sales/export_transactions";
 import { listTransactions as api_sales_list_transactions_listTransactions } from "~backend/sales/list_transactions";
+import {
+    getTransactionHistory as api_sales_transaction_history_getTransactionHistory,
+    getTransactionReceipt as api_sales_transaction_history_getTransactionReceipt
+} from "~backend/sales/transaction_history";
 
 export namespace sales {
 
@@ -647,6 +798,8 @@ export namespace sales {
             this.baseClient = baseClient
             this.createTransaction = this.createTransaction.bind(this)
             this.exportTransactions = this.exportTransactions.bind(this)
+            this.getTransactionHistory = this.getTransactionHistory.bind(this)
+            this.getTransactionReceipt = this.getTransactionReceipt.bind(this)
             this.listTransactions = this.listTransactions.bind(this)
         }
 
@@ -666,6 +819,24 @@ export namespace sales {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/sales/transactions/export`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_sales_export_transactions_exportTransactions>
+        }
+
+        /**
+         * Retrieves transaction history with filters.
+         */
+        public async getTransactionHistory(params: RequestType<typeof api_sales_transaction_history_getTransactionHistory>): Promise<ResponseType<typeof api_sales_transaction_history_getTransactionHistory>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/sales/transactions/history`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_sales_transaction_history_getTransactionHistory>
+        }
+
+        /**
+         * Retrieves transaction receipt for reprint.
+         */
+        public async getTransactionReceipt(params: { id: number }): Promise<ResponseType<typeof api_sales_transaction_history_getTransactionReceipt>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/sales/transactions/${encodeURIComponent(params.id)}/receipt`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_sales_transaction_history_getTransactionReceipt>
         }
 
         /**
@@ -1066,6 +1237,11 @@ type CallParameters = Omit<RequestInit, "headers"> & {
     query?: Record<string, string | string[]>
 }
 
+// AuthDataGenerator is a function that returns a new instance of the authentication data required by this API
+export type AuthDataGenerator = () =>
+  | RequestType<typeof auth_auth>
+  | Promise<RequestType<typeof auth_auth> | undefined>
+  | undefined;
 
 // A fetcher is the prototype for the inbuilt Fetch function
 export type Fetcher = typeof fetch;
@@ -1077,6 +1253,7 @@ class BaseClient {
     readonly fetcher: Fetcher
     readonly headers: Record<string, string>
     readonly requestInit: Omit<RequestInit, "headers"> & { headers?: Record<string, string> }
+    readonly authGenerator?: AuthDataGenerator
 
     constructor(baseURL: string, options: ClientOptions) {
         this.baseURL = baseURL
@@ -1096,9 +1273,41 @@ class BaseClient {
         } else {
             this.fetcher = boundFetch
         }
+
+        // Setup an authentication data generator using the auth data token option
+        if (options.auth !== undefined) {
+            const auth = options.auth
+            if (typeof auth === "function") {
+                this.authGenerator = auth
+            } else {
+                this.authGenerator = () => auth
+            }
+        }
     }
 
     async getAuthData(): Promise<CallParameters | undefined> {
+        let authData: RequestType<typeof auth_auth> | undefined;
+
+        // If authorization data generator is present, call it and add the returned data to the request
+        if (this.authGenerator) {
+            const mayBePromise = this.authGenerator();
+            if (mayBePromise instanceof Promise) {
+                authData = await mayBePromise;
+            } else {
+                authData = mayBePromise;
+            }
+        }
+
+        if (authData) {
+            const data: CallParameters = {};
+
+            data.headers = makeRecord<string, string>({
+                authorization: authData.authorization,
+            });
+
+            return data;
+        }
+
         return undefined;
     }
 

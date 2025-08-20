@@ -18,19 +18,19 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Bahan Baku', path: '/ingredients', icon: Package },
-  { name: 'Resep & Menu', path: '/recipes', icon: ChefHat },
-  { name: 'Harga Jual', path: '/products', icon: TrendingUp },
-  { name: 'Penjualan', path: '/sales', icon: ShoppingCart },
-  { name: 'POS System', path: '/pos', icon: CreditCard },
-  { name: 'Katalog Online', path: '/catalog-admin', icon: Globe },
-  { name: 'Pesanan Online', path: '/catalog-orders', icon: ShoppingBag },
-  { name: 'Target Penjualan', path: '/targets', icon: Target },
-  { name: 'Program Promo', path: '/promotions', icon: Megaphone },
-  { name: 'Channel Penjualan', path: '/channels', icon: Zap },
-  { name: 'Laporan', path: '/reports', icon: BarChart3 },
-  { name: 'Pengaturan', path: '/settings', icon: Settings },
+  { name: 'Dashboard', path: '/store', icon: LayoutDashboard },
+  { name: 'Bahan Baku', path: '/store/ingredients', icon: Package },
+  { name: 'Resep & Menu', path: '/store/recipes', icon: ChefHat },
+  { name: 'Harga Jual', path: '/store/products', icon: TrendingUp },
+  { name: 'Penjualan', path: '/store/sales', icon: ShoppingCart },
+  { name: 'POS System', path: '/store/pos', icon: CreditCard },
+  { name: 'Katalog Online', path: '/store/catalog-admin', icon: Globe },
+  { name: 'Pesanan Online', path: '/store/catalog-orders', icon: ShoppingBag },
+  { name: 'Target Penjualan', path: '/store/targets', icon: Target },
+  { name: 'Program Promo', path: '/store/promotions', icon: Megaphone },
+  { name: 'Channel Penjualan', path: '/store/channels', icon: Zap },
+  { name: 'Laporan', path: '/store/reports', icon: BarChart3 },
+  { name: 'Pengaturan', path: '/store/settings', icon: Settings },
 ];
 
 export default function Sidebar() {
