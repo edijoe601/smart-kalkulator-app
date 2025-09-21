@@ -127,7 +127,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <Badge className="mb-4 bg-blue-100 text-blue-800">
-              🎉 Trial Gratis {settings?.trialDays || 14} Hari
+              🎉 Trial Gratis {settings?.trialDays || 7} Hari
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               {settings?.heroTitle || 'Smart Kalkulator - Solusi POS UKM Terdepan'}
@@ -251,7 +251,7 @@ export default function LandingPage() {
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl">Trial Gratis</CardTitle>
                 <div className="text-4xl font-bold text-gray-900">Gratis</div>
-                <p className="text-gray-600">{settings?.trialDays || 14} hari pertama</p>
+                <p className="text-gray-600">{settings?.trialDays || 7} hari pertama</p>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3 mb-6">
@@ -281,11 +281,26 @@ export default function LandingPage() {
               </div>
               <CardHeader className="text-center pb-4">
                 <CardTitle className="text-2xl">Pro</CardTitle>
-                <div className="text-4xl font-bold text-gray-900">
-                  {selectedPlan === 'monthly' 
-                    ? formatCurrency(settings?.monthlyPrice || 99000)
-                    : formatCurrency(settings?.yearlyPrice || 990000)
-                  }
+                <div className="space-y-1">
+                  {selectedPlan === 'monthly' ? (
+                    <>
+                      <div className="text-lg text-gray-500 line-through">
+                        {formatCurrency((settings?.monthlyPrice || 99000) * 1.3)}
+                      </div>
+                      <div className="text-4xl font-bold text-gray-900">
+                        {formatCurrency(settings?.monthlyPrice || 99000)}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg text-gray-500 line-through">
+                        {formatCurrency((settings?.yearlyPrice || 990000) * 1.3)}
+                      </div>
+                      <div className="text-4xl font-bold text-gray-900">
+                        {formatCurrency(settings?.yearlyPrice || 990000)}
+                      </div>
+                    </>
+                  )}
                 </div>
                 <p className="text-gray-600">
                   per {selectedPlan === 'monthly' ? 'bulan' : 'tahun'}
@@ -380,7 +395,7 @@ export default function LandingPage() {
           </p>
           <SignUpButton mode="modal">
             <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
-              Mulai Trial Gratis {settings?.trialDays || 14} Hari
+              Mulai Trial Gratis {settings?.trialDays || 7} Hari
             </Button>
           </SignUpButton>
         </div>

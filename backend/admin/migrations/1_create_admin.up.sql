@@ -45,7 +45,7 @@ CREATE TABLE landing_page_settings (
   hero_cta_text TEXT NOT NULL DEFAULT 'Mulai Trial Gratis',
   features_title TEXT NOT NULL DEFAULT 'Fitur Lengkap untuk Bisnis UKM',
   pricing_title TEXT NOT NULL DEFAULT 'Paket Berlangganan',
-  trial_days INTEGER NOT NULL DEFAULT 14,
+  trial_days INTEGER NOT NULL DEFAULT 7,
   monthly_price DOUBLE PRECISION NOT NULL DEFAULT 99000,
   yearly_price DOUBLE PRECISION NOT NULL DEFAULT 990000,
   contact_email TEXT NOT NULL DEFAULT 'support@smartkalkulator.com',
