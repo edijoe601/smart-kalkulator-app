@@ -120,11 +120,13 @@ export interface ClientOptions {
 /**
  * Import the endpoint handlers to derive the types for the client.
  */
+import { createSampleAccounts as api_admin_create_sample_accounts_createSampleAccounts } from "~backend/admin/create_sample_accounts";
 import { getAdminDashboardStats as api_admin_dashboard_stats_getAdminDashboardStats } from "~backend/admin/dashboard_stats";
 import {
     getLandingPageSettings as api_admin_landing_page_getLandingPageSettings,
     updateLandingPageSettings as api_admin_landing_page_updateLandingPageSettings
 } from "~backend/admin/landing_page";
+import { listSampleAccounts as api_admin_list_sample_accounts_listSampleAccounts } from "~backend/admin/list_sample_accounts";
 import {
     createTenant as api_admin_manage_users_createTenant,
     deleteTenant as api_admin_manage_users_deleteTenant,
@@ -139,13 +141,21 @@ export namespace admin {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.createSampleAccounts = this.createSampleAccounts.bind(this)
             this.createTenant = this.createTenant.bind(this)
             this.deleteTenant = this.deleteTenant.bind(this)
             this.getAdminDashboardStats = this.getAdminDashboardStats.bind(this)
             this.getLandingPageSettings = this.getLandingPageSettings.bind(this)
+            this.listSampleAccounts = this.listSampleAccounts.bind(this)
             this.listTenants = this.listTenants.bind(this)
             this.updateLandingPageSettings = this.updateLandingPageSettings.bind(this)
             this.updateTenant = this.updateTenant.bind(this)
+        }
+
+        public async createSampleAccounts(params: RequestType<typeof api_admin_create_sample_accounts_createSampleAccounts>): Promise<ResponseType<typeof api_admin_create_sample_accounts_createSampleAccounts>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/create-sample-accounts`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_create_sample_accounts_createSampleAccounts>
         }
 
         /**
@@ -182,6 +192,12 @@ export namespace admin {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/admin/landing-page/settings`, {method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_landing_page_getLandingPageSettings>
+        }
+
+        public async listSampleAccounts(): Promise<ResponseType<typeof api_admin_list_sample_accounts_listSampleAccounts>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/admin/sample-accounts`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_admin_list_sample_accounts_listSampleAccounts>
         }
 
         /**
@@ -237,6 +253,11 @@ import { listOrders as api_catalog_list_orders_listOrders } from "~backend/catal
 import { listProducts as api_catalog_list_products_listProducts } from "~backend/catalog/list_products";
 import { updateOrderStatus as api_catalog_update_order_status_updateOrderStatus } from "~backend/catalog/update_order_status";
 import {
+    checkOrderStatus as api_catalog_whatsapp_auto_reply_checkOrderStatus,
+    handleWhatsAppWebhook as api_catalog_whatsapp_auto_reply_handleWhatsAppWebhook,
+    sendPromoBroadcast as api_catalog_whatsapp_auto_reply_sendPromoBroadcast
+} from "~backend/catalog/whatsapp_auto_reply";
+import {
     getDeliverySchedule as api_catalog_whatsapp_integration_getDeliverySchedule,
     processWhatsAppOrder as api_catalog_whatsapp_integration_processWhatsAppOrder
 } from "~backend/catalog/whatsapp_integration";
@@ -248,15 +269,27 @@ export namespace catalog {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.checkOrderStatus = this.checkOrderStatus.bind(this)
             this.createOrder = this.createOrder.bind(this)
             this.exportOrders = this.exportOrders.bind(this)
             this.generateReceipt = this.generateReceipt.bind(this)
             this.getDeliverySchedule = this.getDeliverySchedule.bind(this)
             this.getSettings = this.getSettings.bind(this)
+            this.handleWhatsAppWebhook = this.handleWhatsAppWebhook.bind(this)
             this.listOrders = this.listOrders.bind(this)
             this.listProducts = this.listProducts.bind(this)
             this.processWhatsAppOrder = this.processWhatsAppOrder.bind(this)
+            this.sendPromoBroadcast = this.sendPromoBroadcast.bind(this)
             this.updateOrderStatus = this.updateOrderStatus.bind(this)
+        }
+
+        /**
+         * Check order status via WhatsApp
+         */
+        public async checkOrderStatus(params: RequestType<typeof api_catalog_whatsapp_auto_reply_checkOrderStatus>): Promise<ResponseType<typeof api_catalog_whatsapp_auto_reply_checkOrderStatus>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/check-status`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_auto_reply_checkOrderStatus>
         }
 
         /**
@@ -305,6 +338,15 @@ export namespace catalog {
         }
 
         /**
+         * Handle incoming WhatsApp messages and generate auto-replies
+         */
+        public async handleWhatsAppWebhook(params: RequestType<typeof api_catalog_whatsapp_auto_reply_handleWhatsAppWebhook>): Promise<ResponseType<typeof api_catalog_whatsapp_auto_reply_handleWhatsAppWebhook>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/webhook`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_auto_reply_handleWhatsAppWebhook>
+        }
+
+        /**
          * Retrieves all catalog orders.
          */
         public async listOrders(): Promise<ResponseType<typeof api_catalog_list_orders_listOrders>> {
@@ -329,6 +371,15 @@ export namespace catalog {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/order`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_integration_processWhatsAppOrder>
+        }
+
+        /**
+         * Send promotional broadcast message
+         */
+        public async sendPromoBroadcast(params: RequestType<typeof api_catalog_whatsapp_auto_reply_sendPromoBroadcast>): Promise<ResponseType<typeof api_catalog_whatsapp_auto_reply_sendPromoBroadcast>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/catalog/whatsapp/send-promo`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_catalog_whatsapp_auto_reply_sendPromoBroadcast>
         }
 
         /**
@@ -744,6 +795,11 @@ export namespace recipes {
 /**
  * Import the endpoint handlers to derive the types for the client.
  */
+import {
+    exportFinancialReport as api_reports_export_sales_report_exportFinancialReport,
+    exportInventoryReport as api_reports_export_sales_report_exportInventoryReport,
+    exportSalesReport as api_reports_export_sales_report_exportSalesReport
+} from "~backend/reports/export_sales_report";
 import { getInventoryReport as api_reports_inventory_report_getInventoryReport } from "~backend/reports/inventory_report";
 import { getSalesReport as api_reports_sales_report_getSalesReport } from "~backend/reports/sales_report";
 
@@ -754,8 +810,38 @@ export namespace reports {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.exportFinancialReport = this.exportFinancialReport.bind(this)
+            this.exportInventoryReport = this.exportInventoryReport.bind(this)
+            this.exportSalesReport = this.exportSalesReport.bind(this)
             this.getInventoryReport = this.getInventoryReport.bind(this)
             this.getSalesReport = this.getSalesReport.bind(this)
+        }
+
+        /**
+         * Export financial report
+         */
+        public async exportFinancialReport(params: RequestType<typeof api_reports_export_sales_report_exportFinancialReport>): Promise<ResponseType<typeof api_reports_export_sales_report_exportFinancialReport>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/reports/export/financial`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_reports_export_sales_report_exportFinancialReport>
+        }
+
+        /**
+         * Export inventory report
+         */
+        public async exportInventoryReport(params: RequestType<typeof api_reports_export_sales_report_exportInventoryReport>): Promise<ResponseType<typeof api_reports_export_sales_report_exportInventoryReport>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/reports/export/inventory`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_reports_export_sales_report_exportInventoryReport>
+        }
+
+        /**
+         * Export comprehensive sales report in various formats
+         */
+        public async exportSalesReport(params: RequestType<typeof api_reports_export_sales_report_exportSalesReport>): Promise<ResponseType<typeof api_reports_export_sales_report_exportSalesReport>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/reports/export/sales`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_reports_export_sales_report_exportSalesReport>
         }
 
         /**
@@ -783,6 +869,7 @@ export namespace reports {
  */
 import { createTransaction as api_sales_create_transaction_createTransaction } from "~backend/sales/create_transaction";
 import { exportTransactions as api_sales_export_transactions_exportTransactions } from "~backend/sales/export_transactions";
+import { generatePrintReceipt as api_sales_generate_print_receipt_generatePrintReceipt } from "~backend/sales/generate_print_receipt";
 import { listTransactions as api_sales_list_transactions_listTransactions } from "~backend/sales/list_transactions";
 import {
     getTransactionHistory as api_sales_transaction_history_getTransactionHistory,
@@ -798,6 +885,7 @@ export namespace sales {
             this.baseClient = baseClient
             this.createTransaction = this.createTransaction.bind(this)
             this.exportTransactions = this.exportTransactions.bind(this)
+            this.generatePrintReceipt = this.generatePrintReceipt.bind(this)
             this.getTransactionHistory = this.getTransactionHistory.bind(this)
             this.getTransactionReceipt = this.getTransactionReceipt.bind(this)
             this.listTransactions = this.listTransactions.bind(this)
@@ -819,6 +907,15 @@ export namespace sales {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/sales/transactions/export`, {method: "POST", body: JSON.stringify(params)})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_sales_export_transactions_exportTransactions>
+        }
+
+        /**
+         * Generate print-ready receipts in various formats
+         */
+        public async generatePrintReceipt(params: RequestType<typeof api_sales_generate_print_receipt_generatePrintReceipt>): Promise<ResponseType<typeof api_sales_generate_print_receipt_generatePrintReceipt>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/sales/print-receipt`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_sales_generate_print_receipt_generatePrintReceipt>
         }
 
         /**
@@ -854,6 +951,17 @@ export namespace sales {
  * Import the endpoint handlers to derive the types for the client.
  */
 import { getSettings as api_settings_get_settings_getSettings } from "~backend/settings/get_settings";
+import {
+    createPaymentMethod as api_settings_payment_methods_createPaymentMethod,
+    deletePaymentMethod as api_settings_payment_methods_deletePaymentMethod,
+    getActivePaymentMethods as api_settings_payment_methods_getActivePaymentMethods,
+    getPaymentMethods as api_settings_payment_methods_getPaymentMethods,
+    getPaymentMethodsByType as api_settings_payment_methods_getPaymentMethodsByType,
+    getPaymentSettings as api_settings_payment_methods_getPaymentSettings,
+    reorderPaymentMethods as api_settings_payment_methods_reorderPaymentMethods,
+    updatePaymentMethod as api_settings_payment_methods_updatePaymentMethod,
+    updatePaymentSettings as api_settings_payment_methods_updatePaymentSettings
+} from "~backend/settings/payment_methods";
 import { updateSettings as api_settings_update_settings_updateSettings } from "~backend/settings/update_settings";
 
 export namespace settings {
@@ -863,8 +971,71 @@ export namespace settings {
 
         constructor(baseClient: BaseClient) {
             this.baseClient = baseClient
+            this.createPaymentMethod = this.createPaymentMethod.bind(this)
+            this.deletePaymentMethod = this.deletePaymentMethod.bind(this)
+            this.getActivePaymentMethods = this.getActivePaymentMethods.bind(this)
+            this.getPaymentMethods = this.getPaymentMethods.bind(this)
+            this.getPaymentMethodsByType = this.getPaymentMethodsByType.bind(this)
+            this.getPaymentSettings = this.getPaymentSettings.bind(this)
             this.getSettings = this.getSettings.bind(this)
+            this.reorderPaymentMethods = this.reorderPaymentMethods.bind(this)
+            this.updatePaymentMethod = this.updatePaymentMethod.bind(this)
+            this.updatePaymentSettings = this.updatePaymentSettings.bind(this)
             this.updateSettings = this.updateSettings.bind(this)
+        }
+
+        /**
+         * Create new payment method
+         */
+        public async createPaymentMethod(params: RequestType<typeof api_settings_payment_methods_createPaymentMethod>): Promise<ResponseType<typeof api_settings_payment_methods_createPaymentMethod>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_createPaymentMethod>
+        }
+
+        /**
+         * Delete payment method
+         */
+        public async deletePaymentMethod(params: { id: number }): Promise<ResponseType<typeof api_settings_payment_methods_deletePaymentMethod>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods/${encodeURIComponent(params.id)}`, {method: "DELETE", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_deletePaymentMethod>
+        }
+
+        /**
+         * Get active payment methods only
+         */
+        public async getActivePaymentMethods(): Promise<ResponseType<typeof api_settings_payment_methods_getActivePaymentMethods>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods/active`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_getActivePaymentMethods>
+        }
+
+        /**
+         * Get all payment methods
+         */
+        public async getPaymentMethods(): Promise<ResponseType<typeof api_settings_payment_methods_getPaymentMethods>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_getPaymentMethods>
+        }
+
+        /**
+         * Get payment method by type for quick access
+         */
+        public async getPaymentMethodsByType(params: { _type: string }): Promise<ResponseType<typeof api_settings_payment_methods_getPaymentMethodsByType>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods/by-type/${encodeURIComponent(params._type)}`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_getPaymentMethodsByType>
+        }
+
+        /**
+         * Get payment settings
+         */
+        public async getPaymentSettings(): Promise<ResponseType<typeof api_settings_payment_methods_getPaymentSettings>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-settings`, {method: "GET", body: undefined})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_getPaymentSettings>
         }
 
         /**
@@ -874,6 +1045,43 @@ export namespace settings {
             // Now make the actual call to the API
             const resp = await this.baseClient.callTypedAPI(`/settings`, {method: "GET", body: undefined})
             return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_get_settings_getSettings>
+        }
+
+        /**
+         * Reorder payment methods
+         */
+        public async reorderPaymentMethods(params: RequestType<typeof api_settings_payment_methods_reorderPaymentMethods>): Promise<ResponseType<typeof api_settings_payment_methods_reorderPaymentMethods>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods/reorder`, {method: "POST", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_reorderPaymentMethods>
+        }
+
+        /**
+         * Update payment method
+         */
+        public async updatePaymentMethod(params: RequestType<typeof api_settings_payment_methods_updatePaymentMethod>): Promise<ResponseType<typeof api_settings_payment_methods_updatePaymentMethod>> {
+            // Construct the body with only the fields which we want encoded within the body (excluding query string or header fields)
+            const body: Record<string, any> = {
+                accountName:   params.accountName,
+                accountNumber: params.accountNumber,
+                bankName:      params.bankName,
+                displayOrder:  params.displayOrder,
+                isActive:      params.isActive,
+                name:          params.name,
+                notes:         params.notes,
+                qrCodeUrl:     params.qrCodeUrl,
+                type:          params.type,
+            }
+
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-methods/${encodeURIComponent(params.id)}`, {method: "PUT", body: JSON.stringify(body)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_updatePaymentMethod>
+        }
+
+        public async updatePaymentSettings(params: RequestType<typeof api_settings_payment_methods_updatePaymentSettings>): Promise<ResponseType<typeof api_settings_payment_methods_updatePaymentSettings>> {
+            // Now make the actual call to the API
+            const resp = await this.baseClient.callTypedAPI(`/settings/payment-settings`, {method: "PUT", body: JSON.stringify(params)})
+            return JSON.parse(await resp.text(), dateReviver) as ResponseType<typeof api_settings_payment_methods_updatePaymentSettings>
         }
 
         /**
