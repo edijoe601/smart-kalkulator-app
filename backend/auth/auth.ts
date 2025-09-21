@@ -19,12 +19,11 @@ export interface AuthData {
 }
 
 // Configure the authorized parties.
-// TODO: Configure this for your own domain when deploying to production.
 const AUTHORIZED_PARTIES = [
-  "https://*.lp.dev",
+  "https://smart-kalkulator-app-d2hcstk82vjt19pmedh0.lp.dev",
 ];
 
-const auth = authHandler<AuthParams, AuthData>(
+export const auth = authHandler<AuthParams, AuthData>(
   async (data) => {
     // Resolve the authenticated user from the authorization header or session cookie.
     const token = data.authorization?.replace("Bearer ", "") ?? data.session?.value;
@@ -33,7 +32,7 @@ const auth = authHandler<AuthParams, AuthData>(
     }
 
     try {
-      const verifiedToken = await clerkClient.verifyToken(token, {
+      const verifiedToken = await verifyToken(token, {
         authorizedParties: AUTHORIZED_PARTIES,
         secretKey: clerkSecretKey(),
       });
@@ -51,7 +50,7 @@ const auth = authHandler<AuthParams, AuthData>(
         tenantId
       };
     } catch (err) {
-      throw APIError.unauthenticated("invalid token", err);
+      throw APIError.unauthenticated("invalid token", err as Error);
     }
   }
 );
