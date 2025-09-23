@@ -1,5 +1,9 @@
-import { api } from "encore.dev/api";
+import { api, Header } from "encore.dev/api";
 import { catalogDB } from "./db";
+import { secret } from "encore.dev/config";
+import crypto from "crypto";
+
+const whatsappWebhookSecret = secret("WhatsAppWebhookSecret");
 
 export interface WhatsAppWebhookRequest {
   from: string;
@@ -7,6 +11,11 @@ export interface WhatsAppWebhookRequest {
   message: string;
   messageType: "text" | "image" | "audio" | "document";
   timestamp: number;
+}
+
+export interface WhatsAppWebhookParams {
+  signature?: Header<"X-WhatsApp-Signature">;
+  timestamp?: Header<"X-WhatsApp-Timestamp">;
 }
 
 export interface AutoReplyResponse {
@@ -22,11 +31,56 @@ export interface WhatsAppSettings {
   keywordResponses: { [key: string]: string };
 }
 
+// Validate WhatsApp webhook signature
+function validateWebhookSignature(payload: string, signature: string, timestamp: string): boolean {
+  try {
+    const webhookSecret = whatsappWebhookSecret();
+    if (!webhookSecret) {
+      console.warn('WhatsApp webhook secret not configured');
+      return true; // Allow if no secret is configured
+    }
+
+    // Create expected signature
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(timestamp + payload)
+      .digest('hex');
+
+    const providedSignature = signature.replace('sha256=', '');
+    
+    return crypto.timingSafeEqual(
+      Buffer.from(expectedSignature, 'hex'),
+      Buffer.from(providedSignature, 'hex')
+    );
+  } catch (error) {
+    console.error('Webhook signature validation error:', error);
+    return false;
+  }
+}
+
 // Handle incoming WhatsApp messages and generate auto-replies
-export const handleWhatsAppWebhook = api(
+export const handleWhatsAppWebhook = api<WhatsAppWebhookRequest & WhatsAppWebhookParams, AutoReplyResponse>(
   { method: "POST", path: "/catalog/whatsapp/webhook", expose: true },
-  async (req: WhatsAppWebhookRequest): Promise<AutoReplyResponse> => {
+  async (req) => {
     try {
+      // Validate webhook signature if provided
+      if (req.signature && req.timestamp) {
+        const payload = JSON.stringify({
+          from: req.from,
+          to: req.to,
+          message: req.message,
+          messageType: req.messageType,
+          timestamp: req.timestamp
+        });
+        
+        if (!validateWebhookSignature(payload, req.signature, req.timestamp)) {
+          console.error('Invalid webhook signature');
+          return {
+            reply: "Webhook signature validation failed"
+          };
+        }
+      }
+
       const message = req.message.toLowerCase().trim();
       
       // Get WhatsApp settings

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import backend from '~backend/client';
+import { useBackend } from '../hooks/useBackend';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,10 @@ import { useToast } from '@/components/ui/use-toast';
 import { Plus, TrendingUp } from 'lucide-react';
 import type { Product, CreateProductRequest } from '~backend/products/create';
 import type { Recipe } from '~backend/recipes/list';
+import PriceDisplay from '../components/PriceDisplay';
+import LoadingSpinner from '../components/LoadingSpinner';
+import RoleGuard from '../components/RoleGuard';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 
 export default function Products() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,15 +31,19 @@ export default function Products() {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const backend = useBackend();
+  const { handleError } = useErrorHandler();
 
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading, error: productsError } = useQuery({
     queryKey: ['products'],
-    queryFn: () => backend.products.list()
+    queryFn: () => backend.products.list(),
+    onError: (error) => handleError(error, 'loading products')
   });
 
   const { data: recipesData } = useQuery({
     queryKey: ['recipes'],
-    queryFn: () => backend.recipes.list()
+    queryFn: () => backend.recipes.list(),
+    onError: (error) => handleError(error, 'loading recipes')
   });
 
   const createMutation = useMutation({
@@ -58,12 +66,7 @@ export default function Products() {
       });
     },
     onError: (error) => {
-      console.error('Error creating product:', error);
-      toast({
-        title: "Error",
-        description: "Gagal menambahkan produk",
-        variant: "destructive"
-      });
+      handleError(error, 'creating product');
     }
   });
 
@@ -96,10 +99,11 @@ export default function Products() {
   };
 
   if (productsLoading) {
-    return <div>Loading...</div>;
+    return <LoadingSpinner size="lg" text="Loading products..." />;
   }
 
   return (
+    <RoleGuard allowedRoles={['user', 'admin']} requireSubscription={true}>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -238,8 +242,16 @@ export default function Products() {
                   <span className="text-gray-600">HPP:</span>
                   <span className="font-medium">{formatCurrency(product.costPrice)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-600">Harga Jual:</span>
+                  <PriceDisplay 
+                    originalPrice={product.costPrice * 1.5} // Example markup
+                    sellingPrice={product.sellingPrice}
+                    size="sm"
+                  />
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">HPP:</span>
                   <span className="font-bold text-green-600">{formatCurrency(product.sellingPrice)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -278,5 +290,6 @@ export default function Products() {
         </Card>
       )}
     </div>
+    </RoleGuard>
   );
 }

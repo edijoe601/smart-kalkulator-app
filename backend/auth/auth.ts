@@ -16,6 +16,9 @@ export interface AuthData {
   email: string | null;
   role: string;
   tenantId?: string;
+  subscriptionStatus: string;
+  trialEndDate?: Date;
+  imageUrl: string;
 }
 
 // Configure the authorized parties.
@@ -42,12 +45,17 @@ export const auth = authHandler<AuthParams, AuthData>(
       // Get user role and tenant from metadata
       const role = user.publicMetadata?.role as string || 'user';
       const tenantId = user.publicMetadata?.tenantId as string;
+      const subscriptionStatus = user.publicMetadata?.subscriptionStatus as string || 'trial';
+      const trialEndDate = user.publicMetadata?.trialEndDate ? new Date(user.publicMetadata.trialEndDate as string) : undefined;
       
       return {
         userID: user.id,
         email: user.emailAddresses[0]?.emailAddress ?? null,
         role,
-        tenantId
+        tenantId,
+        subscriptionStatus,
+        trialEndDate,
+        imageUrl: user.imageUrl
       };
     } catch (err) {
       throw APIError.unauthenticated("invalid token", err as Error);

@@ -3,6 +3,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react';
 import { Toaster } from '@/components/ui/toaster';
 import { clerkPublishableKey } from './config';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import OnboardingFlow from './components/OnboardingFlow';
+import TrialBanner from './components/TrialBanner';
 
 // Admin Components
 import AdminLayout from './components/AdminLayout';
@@ -45,8 +48,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppInner() {
   return (
-    <Router>
-      <Routes>
+    <ErrorBoundary>
+      <Router>
+        <OnboardingFlow />
+        <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/catalog" element={<PublicCatalog />} />
@@ -68,6 +73,7 @@ function AppInner() {
         <Route path="/store/*" element={
           <ProtectedRoute>
             <Layout>
+              <TrialBanner />
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/ingredients" element={<Ingredients />} />
@@ -89,6 +95,7 @@ function AppInner() {
       </Routes>
       <Toaster />
     </Router>
+    </ErrorBoundary>
   );
 }
 
